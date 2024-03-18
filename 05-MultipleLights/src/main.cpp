@@ -16,6 +16,8 @@
 // Shader include
 #include "Headers/Shader.h"
 
+////#include "glut.h"
+
 // Model geometric includes
 #include "Headers/Sphere.h"
 #include "Headers/Cylinder.h"
@@ -43,7 +45,7 @@
 int screenWidth;
 int screenHeight;
 
-GLFWwindow *window;
+GLFWwindow* window;
 
 Shader shader;
 //Shader con skybox
@@ -94,6 +96,12 @@ Model modelBuzzHead;
 Model modelBuzzLeftArm;
 Model modelBuzzLeftForeArm;
 Model modelBuzzLeftHand;
+
+//modelos de las lamparas
+Model modelLamp1;
+Model modelLamp2;
+Model modelLampPost;
+
 // Modelos animados
 // Mayow
 Model mayowModelAnimate;
@@ -186,6 +194,36 @@ int numPasosBuzz = 0;
 float rotHelHelY = 0.0;
 float rotHelHelBack = 0.0;
 
+//lamps position
+std::vector<glm::vec3> lamp1Position = {
+	glm::vec3(-7.03,0,-19.14),
+	glm::vec3(24.41,0,-34.57),
+	glm::vec3(-10.15,0,-54.1)
+};
+
+std::vector<float> lamp1Orientation = {
+	-17.0,-82.67,23.7, 29.65
+};
+
+std::vector<glm::vec3> lamp2Position = {
+	glm::vec3(-7.03,0,-19.14),
+	glm::vec3(24.41,0,-34.57),
+	glm::vec3(19.92,0,-8.0)
+};
+
+std::vector<float> lamp2Orientation = {
+	90+21,90-65,-90+22
+};
+std::vector<glm::vec3> lampPostPosition = {
+
+	glm::vec3(-36.52,0,-23.24),
+	glm::vec3(-52.73,0,-3.9)
+};
+
+std::vector<float> lampPostOrientation = {
+	0,0
+};
+
 // Var animate lambo dor
 int stateDoor = 0;
 float dorRotCount = 0.0;
@@ -198,11 +236,11 @@ const float avance = 0.1;
 const float giroEclipse = 0.5f;
 
 // Se definen todos las funciones.
-void reshapeCallback(GLFWwindow *Window, int widthRes, int heightRes);
-void keyCallback(GLFWwindow *window, int key, int scancode, int action,
-		int mode);
-void mouseCallback(GLFWwindow *window, double xpos, double ypos);
-void mouseButtonCallback(GLFWwindow *window, int button, int state, int mod);
+void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes);
+void keyCallback(GLFWwindow* window, int key, int scancode, int action,
+	int mode);
+void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+void mouseButtonCallback(GLFWwindow* window, int button, int state, int mod);
 void init(int width, int height, std::string strTitle, bool bFullScreen);
 void destroy();
 bool processInput(bool continueApplication = true);
@@ -224,15 +262,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	if (bFullScreen)
 		window = glfwCreateWindow(width, height, strTitle.c_str(),
-				glfwGetPrimaryMonitor(), nullptr);
+			glfwGetPrimaryMonitor(), nullptr);
 	else
 		window = glfwCreateWindow(width, height, strTitle.c_str(), nullptr,
-				nullptr);
+			nullptr);
 
 	if (window == nullptr) {
 		std::cerr
-				<< "Error to create GLFW window, you can try download the last version of your video card that support OpenGL 3.3+"
-				<< std::endl;
+			<< "Error to create GLFW window, you can try download the last version of your video card that support OpenGL 3.3+"
+			<< std::endl;
 		destroy();
 		exit(-1);
 	}
@@ -342,7 +380,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelDartLegoRightLeg.loadModel("../models/LegoDart/LeoDart_right_leg.obj");
 	modelDartLegoRightLeg.setShader(&shaderMulLighting);
 
-	
+
 	// Buzz
 	modelBuzzTorso.loadModel("../models/buzz/buzzlightyTorso.obj");
 	modelBuzzTorso.setShader(&shaderMulLighting);
@@ -355,10 +393,18 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelBuzzLeftHand.loadModel("../models/buzz/buzzlightyLeftHand.obj");
 	modelBuzzLeftHand.setShader(&shaderMulLighting);
 
+	//carga de modelos de las luces
+	modelLamp1.loadModel("..models/Street-Lamp-Black/objetLamp.obj");
+	modelLamp1.setShader(&shaderMulLighting);
+	modelLamp2.loadModel("..models/Street-Light/Lamp.obj");
+	modelLamp2.setShader(&shaderMulLighting);
+	modelLampPost.loadModel("..models/Street-Light/LampPost.obj");
+	modelLampPost.setShader(&shaderMulLighting);
+
 	// Mayow
 	mayowModelAnimate.loadModel("../models/mayow/personaje2.fbx");
 	mayowModelAnimate.setShader(&shaderMulLighting);
-	
+
 	// Cowboy
 	cowboyModelAnimate.loadModel("../models/cowboy/Character Running.fbx");
 	cowboyModelAnimate.setShader(&shaderMulLighting);
@@ -376,7 +422,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	terrain.setShader(&shaderTerrain);
 
 	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
-	
+
 	// Carga de texturas para el skybox
 	Texture skyboxTexture = Texture("");
 	glGenTextures(1, &skyboxTextureID);
@@ -393,8 +439,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		skyboxTexture.loadImage(true);
 		if (skyboxTexture.getData()) {
 			glTexImage2D(types[i], 0, skyboxTexture.getChannels() == 3 ? GL_RGB : GL_RGBA, skyboxTexture.getWidth(), skyboxTexture.getHeight(), 0,
-			skyboxTexture.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, skyboxTexture.getData());
-		} else
+				skyboxTexture.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, skyboxTexture.getData());
+		}
+		else
 			std::cout << "Failed to load texture" << std::endl;
 		skyboxTexture.freeImage();
 	}
@@ -421,10 +468,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// a los datos
 		std::cout << "Numero de canales :=> " << textureCesped.getChannels() << std::endl;
 		glTexImage2D(GL_TEXTURE_2D, 0, textureCesped.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCesped.getWidth(), textureCesped.getHeight(), 0,
-		textureCesped.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCesped.getData());
+			textureCesped.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCesped.getData());
 		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
 		glGenerateMipmap(GL_TEXTURE_2D);
-	} else
+	}
+	else
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
 	textureCesped.freeImage();
@@ -450,10 +498,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
 		// a los datos
 		glTexImage2D(GL_TEXTURE_2D, 0, textureWall.getChannels() == 3 ? GL_RGB : GL_RGBA, textureWall.getWidth(), textureWall.getHeight(), 0,
-		textureWall.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureWall.getData());
+			textureWall.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureWall.getData());
 		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
 		glGenerateMipmap(GL_TEXTURE_2D);
-	} else
+	}
+	else
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
 	textureWall.freeImage();
@@ -479,10 +528,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
 		// a los datos
 		glTexImage2D(GL_TEXTURE_2D, 0, textureWindow.getChannels() == 3 ? GL_RGB : GL_RGBA, textureWindow.getWidth(), textureWindow.getHeight(), 0,
-		textureWindow.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureWindow.getData());
+			textureWindow.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureWindow.getData());
 		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
 		glGenerateMipmap(GL_TEXTURE_2D);
-	} else
+	}
+	else
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
 	textureWindow.freeImage();
@@ -508,10 +558,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
 		// a los datos
 		glTexImage2D(GL_TEXTURE_2D, 0, textureHighway.getChannels() == 3 ? GL_RGB : GL_RGBA, textureHighway.getWidth(), textureHighway.getHeight(), 0,
-		textureHighway.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureHighway.getData());
+			textureHighway.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureHighway.getData());
 		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
 		glGenerateMipmap(GL_TEXTURE_2D);
-	} else
+	}
+	else
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
 	textureHighway.freeImage();
@@ -525,13 +576,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
-	if(textureLandingPad.getData()){
+	if (textureLandingPad.getData()) {
 		// Transferir los datos de la imagen a la tarjeta
 		glTexImage2D(GL_TEXTURE_2D, 0, textureLandingPad.getChannels() == 3 ? GL_RGB : GL_RGBA, textureLandingPad.getWidth(), textureLandingPad.getHeight(), 0,
-		textureLandingPad.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureLandingPad.getData());
+			textureLandingPad.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureLandingPad.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
-	else 
+	else
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureLandingPad.freeImage(); // Liberamos memoria
 
@@ -545,13 +596,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
-	if(textureR.getData()){
+	if (textureR.getData()) {
 		// Transferir los datos de la imagen a la tarjeta
 		glTexImage2D(GL_TEXTURE_2D, 0, textureR.getChannels() == 3 ? GL_RGB : GL_RGBA, textureR.getWidth(), textureR.getHeight(), 0,
-		textureR.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureR.getData());
+			textureR.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureR.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
-	else 
+	else
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureR.freeImage(); // Liberamos memoria
 
@@ -564,13 +615,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
-	if(textureG.getData()){
+	if (textureG.getData()) {
 		// Transferir los datos de la imagen a la tarjeta
 		glTexImage2D(GL_TEXTURE_2D, 0, textureG.getChannels() == 3 ? GL_RGB : GL_RGBA, textureG.getWidth(), textureG.getHeight(), 0,
-		textureG.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureG.getData());
+			textureG.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureG.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
-	else 
+	else
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureG.freeImage(); // Liberamos memoria
 
@@ -583,13 +634,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
-	if(textureB.getData()){
+	if (textureB.getData()) {
 		// Transferir los datos de la imagen a la tarjeta
 		glTexImage2D(GL_TEXTURE_2D, 0, textureB.getChannels() == 3 ? GL_RGB : GL_RGBA, textureB.getWidth(), textureB.getHeight(), 0,
-		textureB.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureB.getData());
+			textureB.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureB.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
-	else 
+	else
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureB.freeImage(); // Liberamos memoria
 
@@ -602,13 +653,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
-	if(textureBlendMap.getData()){
+	if (textureBlendMap.getData()) {
 		// Transferir los datos de la imagen a la tarjeta
 		glTexImage2D(GL_TEXTURE_2D, 0, textureBlendMap.getChannels() == 3 ? GL_RGB : GL_RGBA, textureBlendMap.getWidth(), textureBlendMap.getHeight(), 0,
-		textureBlendMap.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureBlendMap.getData());
+			textureBlendMap.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureBlendMap.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
-	else 
+	else
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureBlendMap.freeImage(); // Liberamos memoria
 
@@ -669,6 +720,11 @@ void destroy() {
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
 
+
+	modelLamp1.destroy();
+	modelLamp2.destroy();
+	modelLampPost.destroy();
+
 	// Terrains objects Delete
 	terrain.destroy();
 
@@ -689,14 +745,14 @@ void destroy() {
 	glDeleteTextures(1, &skyboxTextureID);
 }
 
-void reshapeCallback(GLFWwindow *Window, int widthRes, int heightRes) {
+void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes) {
 	screenWidth = widthRes;
 	screenHeight = heightRes;
 	glViewport(0, 0, widthRes, heightRes);
 }
 
-void keyCallback(GLFWwindow *window, int key, int scancode, int action,
-		int mode) {
+void keyCallback(GLFWwindow* window, int key, int scancode, int action,
+	int mode) {
 	if (action == GLFW_PRESS) {
 		switch (key) {
 		case GLFW_KEY_ESCAPE:
@@ -706,14 +762,14 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action,
 	}
 }
 
-void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
+void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	offsetX = xpos - lastMousePosX;
 	offsetY = ypos - lastMousePosY;
 	lastMousePosX = xpos;
 	lastMousePosY = ypos;
 }
 
-void mouseButtonCallback(GLFWwindow *window, int button, int state, int mod) {
+void mouseButtonCallback(GLFWwindow* window, int button, int state, int mod) {
 	if (state == GLFW_PRESS) {
 		switch (button) {
 		case GLFW_MOUSE_BUTTON_RIGHT:
@@ -749,93 +805,93 @@ bool processInput(bool continueApplication) {
 	offsetY = 0;
 
 	// Seleccionar modelo
-	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){
+	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
 		enableCountSelected = false;
 		modelSelected++;
-		if(modelSelected > 4)
+		if (modelSelected > 4)
 			modelSelected = 0;
-		if(modelSelected == 1)
+		if (modelSelected == 1)
 			fileName = "../animaciones/animation_dart_joints.txt";
 		if (modelSelected == 2)
 			fileName = "../animaciones/animation_dart.txt";
-		if(modelSelected == 3)
+		if (modelSelected == 3)
 			fileName = "../animaciones/animation_buzz_joints.txt";
 		if (modelSelected == 4)
 			fileName = "../animaciones/animation_buzz.txt";
 		std::cout << "modelSelected:" << modelSelected << std::endl;
 	}
-	else if(glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
+	else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
 		enableCountSelected = true;
 
 	// Guardar key frames
-	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS
-			&& glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS
+		&& glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
 		record = true;
-		if(myfile.is_open())
+		if (myfile.is_open())
 			myfile.close();
 		myfile.open(fileName);
 	}
-	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE
-			&& glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE
+		&& glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
 		record = false;
 		myfile.close();
-		if(modelSelected == 1)
+		if (modelSelected == 1)
 			keyFramesDartJoints = getKeyRotFrames(fileName);
 		if (modelSelected == 2)
 			keyFramesDart = getKeyFrames(fileName);
-		if(modelSelected == 3)
+		if (modelSelected == 3)
 			keyFramesBuzzJoints = getKeyRotFrames(fileName);
 		if (modelSelected == 4)
 			keyFramesBuzz = getKeyFrames(fileName);
 	}
-	if(availableSave && glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS){
+	if (availableSave && glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
 		saveFrame = true;
 		availableSave = false;
-	}if(glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_RELEASE)
+	}if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_RELEASE)
 		availableSave = true;
 
 	// Dart Lego model movements
 	if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
 		rotDartHead += 0.02;
 	else if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
 		rotDartHead -= 0.02;
 	if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
 		rotDartLeftArm += 0.02;
 	else if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
 		rotDartLeftArm -= 0.02;
 	if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
 		rotDartRightArm += 0.02;
 	else if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
 		rotDartRightArm -= 0.02;
 	if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
 		rotDartLeftHand += 0.02;
 	else if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
 		rotDartLeftHand -= 0.02;
 	if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
 		rotDartRightHand += 0.02;
 	else if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
 		rotDartRightHand -= 0.02;
 	if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS)
 		rotDartLeftLeg += 0.02;
 	else if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS)
 		rotDartLeftLeg -= 0.02;
 	if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS)
 		rotDartRightLeg += 0.02;
 	else if (modelSelected == 1 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS)
 		rotDartRightLeg -= 0.02;
 	if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		modelMatrixDart = glm::rotate(modelMatrixDart, 0.02f, glm::vec3(0, 1, 0));
@@ -845,31 +901,31 @@ bool processInput(bool continueApplication) {
 		modelMatrixDart = glm::translate(modelMatrixDart, glm::vec3(-0.02, 0.0, 0.0));
 	else if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		modelMatrixDart = glm::translate(modelMatrixDart, glm::vec3(0.02, 0.0, 0.0));
-	
+
 	// Movimientos de buzz
 	if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
 		rotBuzzHead += 0.02;
 	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
 		rotBuzzHead -= 0.02;
 	if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
 		rotBuzzLeftarm += 0.02;
 	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
 		rotBuzzLeftarm -= 0.02;
 	if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
 		rotBuzzLeftForeArm += 0.02;
 	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
 		rotBuzzLeftForeArm -= 0.02;
 	if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE &&
-			glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
 		rotBuzzLeftHand += 0.02;
 	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
-			glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+		glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
 		rotBuzzLeftHand -= 0.02;
 	if (modelSelected == 4 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		modelMatrixBuzz = glm::rotate(modelMatrixBuzz, 0.02f, glm::vec3(0, 1, 0));
@@ -881,18 +937,19 @@ bool processInput(bool continueApplication) {
 		modelMatrixBuzz = glm::translate(modelMatrixBuzz, glm::vec3(0.0, 0.0, -0.02));
 
 	// Controles de mayow
-	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		modelMatrixMayow = glm::rotate(modelMatrixMayow, 0.02f, glm::vec3(0, 1, 0));
 		animationMayowIndex = 0;
-	} else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+	}
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
 		modelMatrixMayow = glm::rotate(modelMatrixMayow, -0.02f, glm::vec3(0, 1, 0));
 		animationMayowIndex = 0;
 	}
-	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, 0.02));
 		animationMayowIndex = 0;
 	}
-	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, -0.02));
 		animationMayowIndex = 0;
 	}
@@ -947,7 +1004,7 @@ void applicationLoop() {
 
 	while (psi) {
 		currTime = TimeManager::Instance().GetTime();
-		if(currTime - lastTime < 0.016666667){
+		if (currTime - lastTime < 0.016666667) {
 			glfwPollEvents();
 			continue;
 		}
@@ -964,7 +1021,7 @@ void applicationLoop() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f),
-				(float) screenWidth / (float) screenHeight, 0.01f, 100.0f);
+			(float)screenWidth / (float)screenHeight, 0.01f, 100.0f);
 		glm::mat4 view = camera->getViewMatrix();
 
 		// Settea la matriz de vista y projection al shader con solo color
@@ -973,51 +1030,130 @@ void applicationLoop() {
 
 		// Settea la matriz de vista y projection al shader con skybox
 		shaderSkybox.setMatrix4("projection", 1, false,
-				glm::value_ptr(projection));
+			glm::value_ptr(projection));
 		shaderSkybox.setMatrix4("view", 1, false,
-				glm::value_ptr(glm::mat4(glm::mat3(view))));
+			glm::value_ptr(glm::mat4(glm::mat3(view))));
 		// Settea la matriz de vista y projection al shader con multiples luces
 		shaderMulLighting.setMatrix4("projection", 1, false,
-					glm::value_ptr(projection));
+			glm::value_ptr(projection));
 		shaderMulLighting.setMatrix4("view", 1, false,
-				glm::value_ptr(view));
+			glm::value_ptr(view));
 		// Settea la matriz de vista y projection al shader con multiples luces
 		shaderTerrain.setMatrix4("projection", 1, false,
-				glm::value_ptr(projection));
+			glm::value_ptr(projection));
 		shaderTerrain.setMatrix4("view", 1, false,
-				glm::value_ptr(view));
+			glm::value_ptr(view));
 
 		/*******************************************
 		 * Propiedades Luz direccional
 		 *******************************************/
 		shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
-		shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.7, 0.7, 0.7)));
-		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.9, 0.9, 0.9)));
+		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));//0.05
+		shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));//0.3
+		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.4, 0.4, 0.4)));//0.4
 		shaderMulLighting.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
 
 		shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
-		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.7, 0.7, 0.7)));
-		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.9, 0.9, 0.9)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));//0.05
+		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));//0.3
+		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.4, 0.4, 0.4)));//0.4
 		shaderTerrain.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
+
+
+
+
 
 		/*******************************************
 		 * Propiedades SpotLights
 		 *******************************************/
-		shaderMulLighting.setInt("spotLightCount", 0);
-		shaderTerrain.setInt("spotLightCount", 0);
+		glm::vec3 spotPotition = glm::vec3(modelMatrixHeli * glm::vec4(0.0,0.18,1.69,1.0));//offset de helicoptero en blender
+		//spotPotition = glm::vec3(0, 20, );
+		shaderMulLighting.setInt("spotLightCount", 1);
+		shaderTerrain.setInt("spotLightCount", 1);
+
+		shaderMulLighting.setVectorFloat3("spotLights[0].light.ambient", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
+		shaderMulLighting.setVectorFloat3("spotLights[0].light.diffuse", glm::value_ptr(glm::vec3(0.2, 0.2, 0.2)));
+		shaderMulLighting.setVectorFloat3("spotLights[0].light.specular", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
+		shaderMulLighting.setVectorFloat3("spotLights[0].position", glm::value_ptr(glm::vec3(spotPotition)));
+		shaderMulLighting.setVectorFloat3("spotLights[0].direction", glm::value_ptr(glm::vec3(0,-1,0)));
+		shaderMulLighting.setFloat("spotLights[0].constant", 1.0);
+		shaderMulLighting.setFloat("spotLights[0].linear", 0.09);
+		shaderMulLighting.setFloat("spotLights[0].quadratic", 0.02);
+		shaderMulLighting.setFloat("spotLights[0].cutOff", cos(glm::radians(12.5f)));
+		shaderMulLighting.setFloat("spotLights[0].outercutOff", cos(glm::radians(15.0f)));
+		shaderTerrain.setVectorFloat3("spotLights[0].light.ambient", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
+		shaderTerrain.setVectorFloat3("spotLights[0].light.diffuse", glm::value_ptr(glm::vec3(0.2, 0.2, 0.2)));
+		shaderTerrain.setVectorFloat3("spotLights[0].light.specular", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
+		shaderTerrain.setVectorFloat3("spotLights[0].position", glm::value_ptr(glm::vec3(spotPotition)));
+		shaderTerrain.setVectorFloat3("spotLights[0].direction", glm::value_ptr(glm::vec3(0, -1, 0)));
+		shaderTerrain.setFloat("spotLights[0].constant", 1.0);
+		shaderTerrain.setFloat("spotLights[0].linear", 0.09);
+		shaderTerrain.setFloat("spotLights[0].quadratic", 0.02);
+		shaderTerrain.setFloat("spotLights[0].cutOff", cos(glm::radians(12.5f)));
+		shaderTerrain.setFloat("spotLights[0].outercutOff", cos(glm::radians(15.0f)));
 
 		/*******************************************
 		 * Propiedades PointLights
 		 *******************************************/
-		shaderMulLighting.setInt("pointLightCount", 0);
-		shaderTerrain.setInt("pointLightCount", 0);
+		shaderMulLighting.setInt("pointLightCount", lamp1Position.size() + lamp2Position.size());
+		shaderTerrain.setInt("pointLightCount", lamp1Position.size() + lamp2Position.size());
+
+
+
+		for (int i = 0; i < lamp1Position.size(); i++) {
+			glm::mat4 matrixAjustLamp = glm::mat4(1.0f);
+			matrixAjustLamp = glm::translate(matrixAjustLamp, lamp1Position[i]);
+			matrixAjustLamp = glm::rotate(matrixAjustLamp, glm::radians(lamp1Orientation[i]), glm::vec3(0, 1, 0));
+			matrixAjustLamp = glm::scale(matrixAjustLamp, glm::vec3(0.5));
+			matrixAjustLamp = glm::translate(matrixAjustLamp, glm::vec3(0, 10.57, 0));
+			glm::vec3 lampPosition = glm::vec3(matrixAjustLamp[3]);
+			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
+			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
+			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.specular", glm::value_ptr(glm::vec3(0.6, 0.48, 0.03)));
+			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].position", glm::value_ptr(glm::vec3(lampPosition)));
+			shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0);
+			shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09);
+			shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.02);
+
+			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
+			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
+			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.specular", glm::value_ptr(glm::vec3(0.6, 0.48, 0.03)));
+			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].position", glm::value_ptr(glm::vec3(lampPosition)));
+			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0);
+			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09);
+			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.02);
+			//shaderMulLighting.setVectorFloat3("", glm::value_ptr(glm::vec3()));
+		}
+
+		for (int i = 0; i < lamp2Position.size(); i++) {
+			glm::mat4 matrixAjustLamp = glm::mat4(1.0f);
+			matrixAjustLamp = glm::translate(matrixAjustLamp, lamp2Position[i]);
+			matrixAjustLamp = glm::rotate(matrixAjustLamp, glm::radians(lamp2Orientation[i]), glm::vec3(0, 1, 0));
+			matrixAjustLamp = glm::scale(matrixAjustLamp, glm::vec3(0.5));
+			matrixAjustLamp = glm::translate(matrixAjustLamp, glm::vec3(0, 10.57, 0));
+			glm::vec3 lampPosition = glm::vec3(matrixAjustLamp[3]);
+			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
+			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
+			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].light.specular", glm::value_ptr(glm::vec3(0.6, 0.48, 0.03)));
+			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].position", glm::value_ptr(glm::vec3(lampPosition)));
+			shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0);
+			shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09);
+			shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.02);
+
+			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
+			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
+			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.specular", glm::value_ptr(glm::vec3(0.6, 0.48, 0.03)));
+			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].position", glm::value_ptr(glm::vec3(lampPosition)));
+			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0);
+			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09);
+			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.02);
+			//shaderMulLighting.setVectorFloat3("", glm::value_ptr(glm::vec3()));
+		}
 
 		/*******************************************
 		 * Terrain Cesped
 		 *******************************************/
-		// Se activa la textura del agua
+		 // Se activa la textura del agua
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureCespedID);
 		shaderTerrain.setInt("backgroundTexture", 0);
@@ -1042,7 +1178,7 @@ void applicationLoop() {
 		/*******************************************
 		 * Custom objects obj
 		 *******************************************/
-		//Rock render
+		 //Rock render
 		matrixModelRock[3][1] = terrain.getHeightTerrain(matrixModelRock[3][0], matrixModelRock[3][2]);
 		modelRock.render(matrixModelRock);
 		// Forze to enable the unit texture to 0 always ----------------- IMPORTANT
@@ -1059,14 +1195,14 @@ void applicationLoop() {
 		modelEclipseChasis.render(modelMatrixEclipseChasis);
 
 		glm::mat4 modelMatrixFrontalWheels = glm::mat4(modelMatrixEclipseChasis);
-		modelMatrixFrontalWheels = glm::translate(modelMatrixFrontalWheels, glm::vec3(0.0, 1.05813, 4.11483 ));
+		modelMatrixFrontalWheels = glm::translate(modelMatrixFrontalWheels, glm::vec3(0.0, 1.05813, 4.11483));
 		modelMatrixFrontalWheels = glm::rotate(modelMatrixFrontalWheels, rotWheelsY, glm::vec3(0, 1, 0));
 		modelMatrixFrontalWheels = glm::rotate(modelMatrixFrontalWheels, rotWheelsX, glm::vec3(1, 0, 0));
 		modelMatrixFrontalWheels = glm::translate(modelMatrixFrontalWheels, glm::vec3(0.0, -1.05813, -4.11483));
 		modelEclipseFrontalWheels.render(modelMatrixFrontalWheels);
 
 		glm::mat4 modelMatrixRearWheels = glm::mat4(modelMatrixEclipseChasis);
-		modelMatrixRearWheels = glm::translate(modelMatrixRearWheels, glm::vec3(0.0, 1.05813, -4.35157 ));
+		modelMatrixRearWheels = glm::translate(modelMatrixRearWheels, glm::vec3(0.0, 1.05813, -4.35157));
 		modelMatrixRearWheels = glm::rotate(modelMatrixRearWheels, rotWheelsX, glm::vec3(1, 0, 0));
 		modelMatrixRearWheels = glm::translate(modelMatrixRearWheels, glm::vec3(0.0, -1.05813, 4.35157));
 		modelEclipseRearWheels.render(modelMatrixRearWheels);
@@ -1158,7 +1294,30 @@ void applicationLoop() {
 		// Se regresa el cull faces IMPORTANTE para la capa
 		glEnable(GL_CULL_FACE);
 
-		
+
+		//renderloop
+
+		for (unsigned int i = 0; i < lamp1Position.size(); i++) {
+			lamp1Position[i].y = terrain.getHeightTerrain(lamp1Position[i].x, lamp1Position[i].z);
+			modelLamp1.setPosition(lamp1Position[i]);
+			modelLamp1.setScale(glm::vec3(0.5));
+			modelLamp1.setOrientation(glm::vec3(0, lamp1Orientation[i], 0));
+			modelLamp1.render();
+		}
+
+		for (unsigned int i = 0; i < lamp2Position.size(); i++) {
+			lamp2Position[i].y = terrain.getHeightTerrain(lamp2Position[i].x, lamp2Position[i].z);
+			modelLamp2.setPosition(lamp2Position[i]);
+			modelLamp2.setScale(glm::vec3(1.0));
+			modelLamp2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
+			modelLamp2.render();
+			modelLampPost.setPosition(lampPostPosition[i]);
+			modelLampPost.setScale(glm::vec3(1.0));
+			modelLampPost.setOrientation(glm::vec3(0, lampPostOrientation[i], 0));
+			modelLampPost.render();
+		}
+
+
 		glm::mat4 modelMatrixTorso = glm::mat4(modelMatrixBuzz);
 		modelMatrixTorso = glm::scale(modelMatrixTorso, glm::vec3(3.0));
 		modelBuzzTorso.render(modelMatrixTorso);
@@ -1238,10 +1397,10 @@ void applicationLoop() {
 		glCullFace(oldCullFaceMode);
 		glDepthFunc(oldDepthFuncMode);
 
-		
+
 		// Animaciones por keyframes dart Vader
 		// Para salvar los keyframes
-		if(record && modelSelected == 1){
+		if (record && modelSelected == 1) {
 			matrixDartJoints.push_back(rotDartHead);
 			matrixDartJoints.push_back(rotDartLeftArm);
 			matrixDartJoints.push_back(rotDartLeftHand);
@@ -1249,22 +1408,22 @@ void applicationLoop() {
 			matrixDartJoints.push_back(rotDartRightHand);
 			matrixDartJoints.push_back(rotDartLeftLeg);
 			matrixDartJoints.push_back(rotDartRightLeg);
-			if(saveFrame){
+			if (saveFrame) {
 				saveFrame = false;
 				appendFrame(myfile, matrixDartJoints);
 			}
 		}
-		else if(keyFramesDartJoints.size() > 0){
+		else if (keyFramesDartJoints.size() > 0) {
 			// Para reproducir el frame
-			interpolationDartJoints = numPasosDartJoints / (float) maxNumPasosDartJoints;
+			interpolationDartJoints = numPasosDartJoints / (float)maxNumPasosDartJoints;
 			numPasosDartJoints++;
-			if(interpolationDartJoints > 1.0){
+			if (interpolationDartJoints > 1.0) {
 				interpolationDartJoints = 0;
 				numPasosDartJoints = 0;
 				indexFrameDartJoints = indexFrameDartJointsNext;
 				indexFrameDartJointsNext++;
 			}
-			if(indexFrameDartJointsNext > keyFramesDartJoints.size() -1)
+			if (indexFrameDartJointsNext > keyFramesDartJoints.size() - 1)
 				indexFrameDartJointsNext = 0;
 			rotDartHead = interpolate(keyFramesDartJoints, indexFrameDartJoints, indexFrameDartJointsNext, 0, interpolationDartJoints);
 			rotDartLeftArm = interpolate(keyFramesDartJoints, indexFrameDartJoints, indexFrameDartJointsNext, 1, interpolationDartJoints);
@@ -1274,89 +1433,89 @@ void applicationLoop() {
 			rotDartLeftLeg = interpolate(keyFramesDartJoints, indexFrameDartJoints, indexFrameDartJointsNext, 5, interpolationDartJoints);
 			rotDartRightLeg = interpolate(keyFramesDartJoints, indexFrameDartJoints, indexFrameDartJointsNext, 6, interpolationDartJoints);
 		}
-		if(record && modelSelected == 2){
+		if (record && modelSelected == 2) {
 			matrixDart.push_back(modelMatrixDart);
-			if(saveFrame){
+			if (saveFrame) {
 				saveFrame = false;
 				appendFrame(myfile, matrixDart);
 			}
 		}
-		else if(keyFramesDart.size() > 0){
-			interpolationDart = numPasosDart / (float) maxNumPasosDart;
+		else if (keyFramesDart.size() > 0) {
+			interpolationDart = numPasosDart / (float)maxNumPasosDart;
 			numPasosDart++;
-			if(interpolationDart > 1.0){
+			if (interpolationDart > 1.0) {
 				numPasosDart = 0;
 				interpolationDart = 0;
 				indexFrameDart = indexFrameDartNext;
 				indexFrameDartNext++;
 			}
-			if(indexFrameDartNext > keyFramesDart.size() - 1)
+			if (indexFrameDartNext > keyFramesDart.size() - 1)
 				indexFrameDartNext = 0;
 			modelMatrixDart = interpolate(keyFramesDart, indexFrameDart, indexFrameDartNext, 0, interpolationDart);
 		}
 		// Animaciones por keyframes buzz
 		// Para salvar los keyframes
-		if(record && modelSelected == 3){
+		if (record && modelSelected == 3) {
 			matrixBuzzJoints.push_back(rotBuzzHead);
 			matrixBuzzJoints.push_back(rotBuzzLeftarm);
 			matrixBuzzJoints.push_back(rotBuzzLeftForeArm);
 			matrixBuzzJoints.push_back(rotBuzzLeftHand);
-			if(saveFrame){
+			if (saveFrame) {
 				saveFrame = false;
 				appendFrame(myfile, matrixBuzzJoints);
 			}
 		}
-		else if(keyFramesBuzzJoints.size() > 0){
+		else if (keyFramesBuzzJoints.size() > 0) {
 			// Para reproducir el frame
-			interpolationBuzzJoints = numPasosBuzzJoints / (float) maxNumPasosBuzzJoints;
+			interpolationBuzzJoints = numPasosBuzzJoints / (float)maxNumPasosBuzzJoints;
 			numPasosBuzzJoints++;
-			if(interpolationBuzzJoints > 1.0){
+			if (interpolationBuzzJoints > 1.0) {
 				interpolationBuzzJoints = 0;
 				numPasosBuzzJoints = 0;
 				indexFrameBuzzJoints = indexFrameBuzzJointsNext;
 				indexFrameBuzzJointsNext++;
 			}
-			if(indexFrameBuzzJointsNext > keyFramesBuzzJoints.size() -1)
+			if (indexFrameBuzzJointsNext > keyFramesBuzzJoints.size() - 1)
 				indexFrameBuzzJointsNext = 0;
 			rotBuzzHead = interpolate(keyFramesBuzzJoints, indexFrameBuzzJoints, indexFrameBuzzJointsNext, 0, interpolationBuzzJoints);
 			rotBuzzLeftarm = interpolate(keyFramesBuzzJoints, indexFrameBuzzJoints, indexFrameBuzzJointsNext, 1, interpolationBuzzJoints);
 			rotBuzzLeftForeArm = interpolate(keyFramesBuzzJoints, indexFrameBuzzJoints, indexFrameBuzzJointsNext, 2, interpolationBuzzJoints);
 			rotBuzzLeftHand = interpolate(keyFramesBuzzJoints, indexFrameBuzzJoints, indexFrameBuzzJointsNext, 3, interpolationBuzzJoints);
 		}
-		if(record && modelSelected == 4){
+		if (record && modelSelected == 4) {
 			matrixBuzz.push_back(modelMatrixBuzz);
-			if(saveFrame){
+			if (saveFrame) {
 				saveFrame = false;
 				appendFrame(myfile, matrixBuzz);
 			}
 		}
-		else if(keyFramesBuzz.size() > 0){
-			interpolationBuzz = numPasosBuzz / (float) maxNumPasosBuzz;
+		else if (keyFramesBuzz.size() > 0) {
+			interpolationBuzz = numPasosBuzz / (float)maxNumPasosBuzz;
 			numPasosBuzz++;
-			if(interpolationBuzz > 1.0){
+			if (interpolationBuzz > 1.0) {
 				numPasosBuzz = 0;
 				interpolationBuzz = 0;
 				indexFrameBuzz = indexFrameBuzzNext;
 				indexFrameBuzzNext++;
 			}
-			if(indexFrameBuzzNext > keyFramesBuzz.size() - 1)
+			if (indexFrameBuzzNext > keyFramesBuzz.size() - 1)
 				indexFrameBuzzNext = 0;
 			modelMatrixBuzz = interpolate(keyFramesBuzz, indexFrameBuzz, indexFrameBuzzNext, 0, interpolationBuzz);
 		}
-		
+
 		/**********Maquinas de estado*************/
 		// Maquina de estados para el carro eclipse
-		switch (state){
+		switch (state) {
 		case 0:
-			if(numberAdvance == 0)
+			if (numberAdvance == 0)
 				maxAdvance = 65.0;
-			else if(numberAdvance == 1)
+			else if (numberAdvance == 1)
 				maxAdvance = 49.0;
-			else if(numberAdvance == 2)
+			else if (numberAdvance == 2)
 				maxAdvance = 44.5;
-			else if(numberAdvance == 3)
+			else if (numberAdvance == 3)
 				maxAdvance = 49.0;
-			else if(numberAdvance == 4)
+			else if (numberAdvance == 4)
 				maxAdvance = 44.5;
 			state = 1;
 			break;
@@ -1365,9 +1524,9 @@ void applicationLoop() {
 			advanceCount += avance;
 			rotWheelsX += 0.05;
 			rotWheelsY -= 0.02;
-			if(rotWheelsY < 0)
+			if (rotWheelsY < 0)
 				rotWheelsY = 0;
-			if(advanceCount > maxAdvance){
+			if (advanceCount > maxAdvance) {
 				advanceCount = 0;
 				numberAdvance++;
 				state = 2;
@@ -1379,16 +1538,16 @@ void applicationLoop() {
 			rotCount += giroEclipse;
 			rotWheelsX += 0.05;
 			rotWheelsY += 0.02;
-			if(rotWheelsY > 0.25)
+			if (rotWheelsY > 0.25)
 				rotWheelsY = 0.25;
-			if(rotCount >= 90.0f){
+			if (rotCount >= 90.0f) {
 				rotCount = 0;
 				state = 0;
-				if(numberAdvance > 4)
+				if (numberAdvance > 4)
 					numberAdvance = 1;
 			}
 			break;
-		
+
 		default:
 			break;
 		}
@@ -1398,16 +1557,16 @@ void applicationLoop() {
 		{
 		case 0:
 			dorRotCount += 0.5;
-			if(dorRotCount > 75)
+			if (dorRotCount > 75)
 				stateDoor = 1;
 			break;
 		case 1:
 			dorRotCount -= 0.5;
-			if(dorRotCount < 0){
+			if (dorRotCount < 0) {
 				dorRotCount = 0.0;
 				stateDoor = 0;
 			}
-		
+
 		default:
 			break;
 		}
@@ -1420,7 +1579,7 @@ void applicationLoop() {
 	}
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
 	init(800, 700, "Window GLFW", false);
 	applicationLoop();
 	destroy();

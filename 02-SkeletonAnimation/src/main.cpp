@@ -97,6 +97,8 @@ Model mayowModelAnimate;
 Model cowboyModelAnimate;
 Model guardianModelAnimate;
 
+//Practica 2
+Model astronautaModelAnimate;
 
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
 GLuint skyboxTextureID;
@@ -135,7 +137,11 @@ glm::mat4 modelMatrixCowboy = glm::mat4(1.0f);
 glm::mat4 modelMatrixCyborg = glm::mat4(1.0f);
 glm::mat4 modelMatrixGuardian = glm::mat4(1.0f);
 
+//Practica
+glm::mat4 modelMatrixAstronauta = glm::mat4(1.0f);
+
 int animationMayowIndex = 1;
+int animationAstronautaIndex = 2;
 
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
 float rotBuzzHead = 0.0, rotBuzzLeftarm = 0.0, rotBuzzLeftForeArm = 0.0, rotBuzzLeftHand = 0.0;
@@ -358,11 +364,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Cyborg
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
-	//Cyborg
+	//Guardia
 	guardianModelAnimate.loadModel("../models/boblampclean/boblampclean.md5mesh");
 	guardianModelAnimate.setShader(&shaderMulLighting);
 
-
+	//Practica 2
+	astronautaModelAnimate.loadModel("../models/astronauta/astronauta.fbx");
+	astronautaModelAnimate.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
 	
@@ -582,6 +590,9 @@ void destroy() {
 	cyborgModelAnimate.destroy();
 	guardianModelAnimate.destroy();
 
+	//Practica 2
+	astronautaModelAnimate.destroy();
+
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDeleteTextures(1, &textureCespedID);
@@ -786,22 +797,40 @@ bool processInput(bool continueApplication) {
 	else if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		modelMatrixBuzz = glm::translate(modelMatrixBuzz, glm::vec3(0.0, 0.0, -0.02));
 
-	//control de mayow
+	////control de mayow
+	//if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+	//	modelMatrixMayow = glm::rotate(modelMatrixMayow, 0.02f, glm::vec3(0, 1, 0));
+	//	animationMayowIndex = 0;
+	//}
+	//else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+	//	modelMatrixMayow = glm::rotate(modelMatrixMayow, -0.02f, glm::vec3(0, 1, 0));
+	//	animationMayowIndex = 0;
+	//}
+	//if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+	//	modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, 0.02));
+	//	animationMayowIndex = 0;
+	//}
+	//else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+	//	modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, -0.02));
+	//	animationMayowIndex = 0;
+	//}
+
+	//control de astronauta
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, 0.02f, glm::vec3(0, 1, 0));
-		animationMayowIndex = 0;
+		modelMatrixAstronauta = glm::rotate(modelMatrixAstronauta, 0.02f, glm::vec3(0, 1, 0));
+		animationAstronautaIndex = 1;
 	}
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, -0.02f, glm::vec3(0, 1, 0));
-		animationMayowIndex = 0;
+		modelMatrixAstronauta = glm::rotate(modelMatrixAstronauta, -0.02f, glm::vec3(0, 1, 0));
+		animationAstronautaIndex = 1;
 	}
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, 0.02));
-		animationMayowIndex = 0;
+		modelMatrixAstronauta = glm::translate(modelMatrixAstronauta, glm::vec3(0.0, 0.0, 0.02));
+		animationAstronautaIndex = 1;
 	}
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, -0.02));
-		animationMayowIndex = 0;
+		modelMatrixAstronauta = glm::translate(modelMatrixAstronauta, glm::vec3(0.0, 0.0, -0.02));
+		animationAstronautaIndex = 1;
 	}
 
 	glfwPollEvents();
@@ -838,6 +867,9 @@ void applicationLoop() {
 	modelMatrixCowboy = glm::translate(modelMatrixCowboy, glm::vec3(13.0f, 0.05f, 0.0f));
 	modelMatrixCyborg = glm::translate(modelMatrixCyborg, glm::vec3(5.0f, 0.05f, 0.0f));
 	modelMatrixGuardian = glm::translate(modelMatrixGuardian, glm::vec3(10.0f, 0.05f, 0.0f));
+
+	//Practica 2
+	modelMatrixAstronauta = glm::translate(modelMatrixAstronauta, glm::vec3(5.0f, 0.05f, -20.0f));
 
 
 	// Variables to interpolation key frames
@@ -1196,6 +1228,13 @@ void applicationLoop() {
 		modelMatrixGuardianBody = glm::scale(modelMatrixGuardianBody, glm::vec3(0.05f));
 		modelMatrixGuardianBody = glm::rotate(modelMatrixGuardianBody, glm::radians(-90.0f),glm::vec3(1.0,0.0,0.0));
 		guardianModelAnimate.render(modelMatrixGuardianBody);
+
+		//Practica 2
+		glm::mat4 modelMatrixAtronautaBody = glm::mat4(modelMatrixAstronauta);
+		modelMatrixAtronautaBody = glm::scale(modelMatrixAtronautaBody, glm::vec3(0.01f));
+		astronautaModelAnimate.setAnimationIndex(animationAstronautaIndex);
+		astronautaModelAnimate.render(modelMatrixAtronautaBody);
+		animationAstronautaIndex = 2;
 
 		/*******************************************
 		 * Skybox
