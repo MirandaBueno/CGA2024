@@ -102,9 +102,11 @@ Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
 
+Model astronautaModelAnimate;
+
 // Terrain model intance
 // cuadrante, dimension, altura, textura
-Terrain terrain(-1, -1, 200, 32, "../Textures/heightmapexample.png");
+Terrain terrain(-1, -1, 200, 32, "../Textures/pendiente.png");
 
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
 GLuint skyboxTextureID;
@@ -140,6 +142,11 @@ glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixCowboy = glm::mat4(1.0f);
 glm::mat4 modelMatrixGuardian = glm::mat4(1.0f);
 glm::mat4 modelMatrixCyborg = glm::mat4(1.0f);
+
+glm::mat4 modelMatrixAstronauta = glm::mat4(1.0f);
+
+int animationAstronautaIndex = 2;
+
 
 int animationMayowIndex = 1;
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
@@ -369,6 +376,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
 
+	astronautaModelAnimate.loadModel("../models/astronauta/astronauta.fbx");
+	astronautaModelAnimate.setShader(&shaderMulLighting);
+
 	terrain.init();
 	terrain.setShader(&shaderMulLighting);
 
@@ -587,6 +597,8 @@ void destroy() {
 	cowboyModelAnimate.destroy();
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
+	astronautaModelAnimate.destroy();
+
 
 	// Terrain object delete
 	terrain.destroy();
@@ -812,6 +824,23 @@ bool processInput(bool continueApplication) {
 		animationMayowIndex = 0;
 	}
 
+	/*if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		modelMatrixAstronauta = glm::rotate(modelMatrixAstronauta, 0.02f, glm::vec3(0, 1, 0));
+		animationAstronautaIndex = 1;
+	}
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		modelMatrixAstronauta = glm::rotate(modelMatrixAstronauta, -0.02f, glm::vec3(0, 1, 0));
+		animationAstronautaIndex = 1;
+	}
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		modelMatrixAstronauta = glm::translate(modelMatrixAstronauta, glm::vec3(0.0, 0.0, 0.02));
+		animationAstronautaIndex = 1;
+	}
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		modelMatrixAstronauta = glm::translate(modelMatrixAstronauta, glm::vec3(0.0, 0.0, -0.02));
+		animationAstronautaIndex = 1;
+	}*/
+
 	glfwPollEvents();
 	return continueApplication;
 }
@@ -850,6 +879,9 @@ void applicationLoop() {
 	modelMatrixGuardian = glm::rotate(modelMatrixGuardian, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 
 	modelMatrixCyborg = glm::translate(modelMatrixCyborg, glm::vec3(5.0f, 0.05, 0.0f));
+
+	modelMatrixAstronauta = glm::translate(modelMatrixAstronauta, glm::vec3(5.0f, 0.05f, -20.0f));
+	
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -994,8 +1026,18 @@ void applicationLoop() {
 
 		// Lambo car
 		/*modelMatrixLambo[3][1] = terrain.getHeightTerrain(modelMatrixLambo[3][0], modelMatrixLambo[3][2]);*/
+		
+
 		glDisable(GL_CULL_FACE);
 		glm::mat4 modelMatrixLamboChasis = glm::mat4(modelMatrixLambo);
+
+		glm::vec3 ejeyL = glm::normalize(terrain.getNormalTerrain(modelMatrixLambo[3][0], modelMatrixLambo[3][2]));
+		glm::vec3 ejexL = glm::vec3(modelMatrixLambo[0]);
+		glm::vec3 ejezL = glm::normalize(glm::cross(ejexL, ejeyL));
+		ejexL = glm::normalize(glm::cross(ejeyL, ejezL));
+		modelMatrixLambo[0] = glm::vec4(ejexL, 0.0);
+		modelMatrixLambo[1] = glm::vec4(ejeyL, 0.0);
+		modelMatrixLambo[2] = glm::vec4(ejezL, 0.0);
 		modelMatrixLamboChasis[3][1] = terrain.getHeightTerrain(modelMatrixLamboChasis[3][0], modelMatrixLamboChasis[3][2]);
 		modelMatrixLamboChasis = glm::scale(modelMatrixLamboChasis, glm::vec3(1.3, 1.3, 1.3));
 		modelLambo.render(modelMatrixLamboChasis);
@@ -1111,7 +1153,7 @@ void applicationLoop() {
 		modelMatrixMayowBody = glm::scale(modelMatrixMayowBody, glm::vec3(0.021f));
 		mayowModelAnimate.setAnimationIndex(animationMayowIndex);
 		mayowModelAnimate.render(modelMatrixMayowBody);
-		animationMayowIndex = 1;
+		animationMayowIndex =1;
 
 		modelMatrixCowboy[3][1] = terrain.getHeightTerrain(modelMatrixCowboy[3][0], modelMatrixCowboy[3][2]);
 		glm::mat4 modelMatrixCowboyBody = glm::mat4(modelMatrixCowboy);
@@ -1128,6 +1170,29 @@ void applicationLoop() {
 		modelMatrixCyborgBody = glm::scale(modelMatrixCyborgBody, glm::vec3(0.009f));
 		cyborgModelAnimate.setAnimationIndex(1);
 		cyborgModelAnimate.render(modelMatrixCyborgBody);
+
+
+		glm::vec3 ejeyA = glm::normalize(terrain.getNormalTerrain(modelMatrixAstronauta[3][0], modelMatrixAstronauta[3][2]));
+		glm::vec3 ejexA = glm::vec3(modelMatrixAstronauta[0]);
+		glm::vec3 ejezA = glm::normalize(glm::cross(ejexA, ejeyA));
+		ejexA = glm::normalize(glm::cross(ejeyA, ejezA));
+		modelMatrixAstronauta[0] = glm::vec4(ejexA, 0.0);
+		modelMatrixAstronauta[1] = glm::vec4(ejeyA, 0.0);
+		modelMatrixAstronauta[2] = glm::vec4(ejezA, 0.0);
+		modelMatrixAstronauta[3][1] = terrain.getHeightTerrain(modelMatrixAstronauta[3][0], modelMatrixAstronauta[3][2]);
+		glm::mat4 modelMatrixAtronautaBody = glm::mat4(modelMatrixAstronauta);
+		modelMatrixAtronautaBody = glm::scale(modelMatrixAtronautaBody, glm::vec3(0.01f));
+		astronautaModelAnimate.setAnimationIndex(animationAstronautaIndex);
+		astronautaModelAnimate.render(modelMatrixAtronautaBody);
+		//animationAstronautaIndex = 2;
+
+
+		//matrixastronauta[3][1] = terrain.getHeightTerrain(matrixastronauta[3][0], matrixastronauta[3][2]);
+		//glm::mat4 modelAtronautaBody = glm::mat4(matrixastronauta);
+		//modelAtronautaBody = glm::scale(modelAtronautaBody, glm::vec3(1.0f));
+		////astronautaModelAnimate.setAnimationIndex(animationAstronautaIndex);
+		//astronauta.render(modelAtronautaBody);
+		////animationAstronautaIndex = 2;
 
 		/*******************************************
 		 * Skybox
