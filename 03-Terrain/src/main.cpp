@@ -102,7 +102,8 @@ Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
 
-Model astronautaModelAnimate;
+//Model astronautaModelAnimate;
+Model astronauta;
 
 // Terrain model intance
 // cuadrante, dimension, altura, textura
@@ -376,6 +377,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
 
+	/*astronautaModelAnimate.loadModel("../models/astronauta/astronauta.fbx");
+	astronautaModelAnimate.setShader(&shaderMulLighting);*/
 	astronautaModelAnimate.loadModel("../models/astronauta/astronauta.fbx");
 	astronautaModelAnimate.setShader(&shaderMulLighting);
 

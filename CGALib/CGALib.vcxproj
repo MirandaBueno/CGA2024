@@ -68,6 +68,7 @@
     <None Include="..\Shaders\iluminacion_texture_res.vs" />
     <None Include="..\Shaders\multipleLights.fs" />
     <None Include="..\Shaders\multipleLights_fog.fs" />
+    <None Include="..\Shaders\multipleLights_mt.fs" />
     <None Include="..\Shaders\multipleLights_shadow.fs" />
     <None Include="..\Shaders\particlesFire.fs" />
     <None Include="..\Shaders\particlesFire.vs" />
