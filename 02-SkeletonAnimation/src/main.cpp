@@ -58,6 +58,9 @@ Box boxLandingPad;
 Sphere esfera1(10, 10);
 // Models complex instances
 Model modelRock;
+//
+Model modelSailor;
+
 Model modelAircraft;
 Model modelEclipseChasis;
 Model modelEclipseRearWheels;
@@ -97,6 +100,7 @@ Model mayowModelAnimate;
 Model cowboyModelAnimate;
 Model guardianModelAnimate;
 
+
 //Practica 2
 Model astronautaModelAnimate;
 
@@ -125,6 +129,8 @@ int lastMousePosY, offsetY = 0;
 // Model matrix definitions
 glm::mat4 modelMatrixEclipse = glm::mat4(1.0f);
 glm::mat4 matrixModelRock = glm::mat4(1.0);
+glm::mat4 matrixModelSailor = glm::mat4(1.0);
+
 glm::mat4 modelMatrixHeli = glm::mat4(1.0f);
 glm::mat4 modelMatrixLambo = glm::mat4(1.0);
 glm::mat4 modelMatrixAircraft = glm::mat4(1.0);
@@ -287,6 +293,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	modelRock.loadModel("../models/rock/rock.obj");
 	modelRock.setShader(&shaderMulLighting);
+
+	modelSailor.loadModel("../models/sailor/sailor.obj");
+	modelSailor.setShader(&shaderMulLighting);
 
 	modelAircraft.loadModel("../models/Aircraft_obj/E 45 Aircraft_obj.obj");
 	modelAircraft.setShader(&shaderMulLighting);
@@ -578,6 +587,7 @@ void destroy() {
 	modelLamboRearRightWheel.destroy();
 	modelLamboRightDor.destroy();
 	modelRock.destroy();
+	modelSailor.destroy();
 	modelBuzzHead.destroy();
 	modelBuzzLeftArm.destroy();
 	modelBuzzLeftForeArm.destroy();
@@ -851,6 +861,7 @@ void applicationLoop() {
 	int maxAdvance = 0.0;
 
 	matrixModelRock = glm::translate(matrixModelRock, glm::vec3(-3.0, 0.0, 2.0));
+	matrixModelSailor = glm::translate(matrixModelSailor, glm::vec3(20.0, 0.0, 2.0));
 
 	modelMatrixHeli = glm::translate(modelMatrixHeli, glm::vec3(5.0, 10.0, -5.0));
 
@@ -1067,6 +1078,10 @@ void applicationLoop() {
 		 *******************************************/
 		//Rock render
 		modelRock.render(matrixModelRock);
+
+		glm::mat4 modelMatrixSailor = glm::mat4(matrixModelSailor);
+		modelMatrixSailor = glm::scale(matrixModelSailor, glm::vec3(0.5, 0.5, 0.5));
+		modelSailor.render(modelMatrixSailor);
 		// Forze to enable the unit texture to 0 always ----------------- IMPORTANT
 		glActiveTexture(GL_TEXTURE0);
 

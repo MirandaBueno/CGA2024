@@ -11,8 +11,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "02-AnimacionKeyFrames", "02
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Terrain", "Terrain\Terrain.vcxproj", "{20E26270-5A82-4D01-92E8-C63C73D8DB45}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MultipleLights", "MultipleLights\MultipleLights.vcxproj", "{5E5564D1-3C95-4437-9A76-6B9654096E8E}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03-Terrain", "03-Terrain\03-Terrain.vcxproj", "{E121541F-B1D1-452F-85F4-DB3145CF1986}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "04-TerrainBlendMap", "04-TerrainBlendMap\04-TerrainBlendMap.vcxproj", "{85239CAF-9644-4DD9-BE8B-AEB4DBAFCB6C}"
@@ -24,6 +22,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "06-CameraTPS", "06-CameraTPS\06-CameraTPS.vcxproj", "{2050BD44-8575-4232-8394-B3313D0300B0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "07-Colisiones", "07-Colisiones\07-Colisiones.vcxproj", "{7D9F4039-1C58-4CE7-B891-FE29A2C9ED84}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "08-DepthTesting", "08-DepthTesting\08-DepthTesting.vcxproj", "{B1CCE141-5A4E-49D2-84F5-C7A9B5EFD067}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,14 +65,6 @@ Global
 		{20E26270-5A82-4D01-92E8-C63C73D8DB45}.Release|x64.Build.0 = Release|x64
 		{20E26270-5A82-4D01-92E8-C63C73D8DB45}.Release|x86.ActiveCfg = Release|Win32
 		{20E26270-5A82-4D01-92E8-C63C73D8DB45}.Release|x86.Build.0 = Release|Win32
-		{5E5564D1-3C95-4437-9A76-6B9654096E8E}.Debug|x64.ActiveCfg = Debug|x64
-		{5E5564D1-3C95-4437-9A76-6B9654096E8E}.Debug|x64.Build.0 = Debug|x64
-		{5E5564D1-3C95-4437-9A76-6B9654096E8E}.Debug|x86.ActiveCfg = Debug|Win32
-		{5E5564D1-3C95-4437-9A76-6B9654096E8E}.Debug|x86.Build.0 = Debug|Win32
-		{5E5564D1-3C95-4437-9A76-6B9654096E8E}.Release|x64.ActiveCfg = Release|x64
-		{5E5564D1-3C95-4437-9A76-6B9654096E8E}.Release|x64.Build.0 = Release|x64
-		{5E5564D1-3C95-4437-9A76-6B9654096E8E}.Release|x86.ActiveCfg = Release|Win32
-		{5E5564D1-3C95-4437-9A76-6B9654096E8E}.Release|x86.Build.0 = Release|Win32
 		{E121541F-B1D1-452F-85F4-DB3145CF1986}.Debug|x64.ActiveCfg = Debug|x64
 		{E121541F-B1D1-452F-85F4-DB3145CF1986}.Debug|x64.Build.0 = Debug|x64
 		{E121541F-B1D1-452F-85F4-DB3145CF1986}.Debug|x86.ActiveCfg = Debug|Win32
@@ -121,6 +113,14 @@ Global
 		{7D9F4039-1C58-4CE7-B891-FE29A2C9ED84}.Release|x64.Build.0 = Release|x64
 		{7D9F4039-1C58-4CE7-B891-FE29A2C9ED84}.Release|x86.ActiveCfg = Release|Win32
 		{7D9F4039-1C58-4CE7-B891-FE29A2C9ED84}.Release|x86.Build.0 = Release|Win32
+		{B1CCE141-5A4E-49D2-84F5-C7A9B5EFD067}.Debug|x64.ActiveCfg = Debug|x64
+		{B1CCE141-5A4E-49D2-84F5-C7A9B5EFD067}.Debug|x64.Build.0 = Debug|x64
+		{B1CCE141-5A4E-49D2-84F5-C7A9B5EFD067}.Debug|x86.ActiveCfg = Debug|Win32
+		{B1CCE141-5A4E-49D2-84F5-C7A9B5EFD067}.Debug|x86.Build.0 = Debug|Win32
+		{B1CCE141-5A4E-49D2-84F5-C7A9B5EFD067}.Release|x64.ActiveCfg = Release|x64
+		{B1CCE141-5A4E-49D2-84F5-C7A9B5EFD067}.Release|x64.Build.0 = Release|x64
+		{B1CCE141-5A4E-49D2-84F5-C7A9B5EFD067}.Release|x86.ActiveCfg = Release|Win32
+		{B1CCE141-5A4E-49D2-84F5-C7A9B5EFD067}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -102,7 +102,7 @@ Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
 
-//Model astronautaModelAnimate;
+Model astronautaModelAnimate;
 Model astronauta;
 
 // Terrain model intance
@@ -377,10 +377,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
 
-	/*astronautaModelAnimate.loadModel("../models/astronauta/astronauta.fbx");
-	astronautaModelAnimate.setShader(&shaderMulLighting);*/
 	astronautaModelAnimate.loadModel("../models/astronauta/astronauta.fbx");
 	astronautaModelAnimate.setShader(&shaderMulLighting);
+	//astronautaModelAnimate.loadModel("../models/astronauta/astronauta.fbx");
+	//astronautaModelAnimate.setShader(&shaderMulLighting);
 
 	terrain.init();
 	terrain.setShader(&shaderMulLighting);
@@ -682,7 +682,7 @@ bool processInput(bool continueApplication) {
 	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){
 		enableCountSelected = false;
 		modelSelected++;
-		if(modelSelected > 4)
+		if(modelSelected > 5)
 			modelSelected = 0;
 		if(modelSelected == 1)
 			fileName = "../animaciones/animation_dart_joints.txt";
@@ -692,6 +692,8 @@ bool processInput(bool continueApplication) {
 			fileName = "../animaciones/animation_buzz_joints.txt";
 		if (modelSelected == 4)
 			fileName = "../animaciones/animation_buzz.txt";
+		
+			
 		std::cout << "modelSelected:" << modelSelected << std::endl;
 	}
 	else if(glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
@@ -827,22 +829,22 @@ bool processInput(bool continueApplication) {
 		animationMayowIndex = 0;
 	}
 
-	/*if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		modelMatrixAstronauta = glm::rotate(modelMatrixAstronauta, 0.02f, glm::vec3(0, 1, 0));
 		animationAstronautaIndex = 1;
 	}
-	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
 		modelMatrixAstronauta = glm::rotate(modelMatrixAstronauta, -0.02f, glm::vec3(0, 1, 0));
 		animationAstronautaIndex = 1;
 	}
-	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		modelMatrixAstronauta = glm::translate(modelMatrixAstronauta, glm::vec3(0.0, 0.0, 0.02));
 		animationAstronautaIndex = 1;
 	}
-	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		modelMatrixAstronauta = glm::translate(modelMatrixAstronauta, glm::vec3(0.0, 0.0, -0.02));
 		animationAstronautaIndex = 1;
-	}*/
+	}
 
 	glfwPollEvents();
 	return continueApplication;
@@ -1187,7 +1189,7 @@ void applicationLoop() {
 		modelMatrixAtronautaBody = glm::scale(modelMatrixAtronautaBody, glm::vec3(0.01f));
 		astronautaModelAnimate.setAnimationIndex(animationAstronautaIndex);
 		astronautaModelAnimate.render(modelMatrixAtronautaBody);
-		//animationAstronautaIndex = 2;
+		animationAstronautaIndex = 2;
 
 
 		//matrixastronauta[3][1] = terrain.getHeightTerrain(matrixastronauta[3][0], matrixastronauta[3][2]);

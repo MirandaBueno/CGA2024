@@ -39,6 +39,8 @@
 
 #include "Headers/AnimationUtils.h"
 
+#include "Headers/Colisiones.h"
+
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
 int screenWidth;
@@ -56,6 +58,9 @@ Shader shaderTerrain;
 
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
 float distanceFromTarget = 7.0;
+
+Sphere sphereCollider(10, 10);
+Box boxCollider;
 
 Sphere skyboxSphere(20, 20);
 Box boxCesped;
@@ -223,6 +228,11 @@ float GRAVITY = 1.81;
 double tmv = 0; //tiempo en milisegundos
 double startTimeJump = 0;
 
+// Mapa de colliders
+std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>> collidersSBB;
+std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>> collidersOBB;
+
+
 // Variables animacion maquina de estados eclipse
 const float avance = 0.1;
 const float giroEclipse = 0.5f;
@@ -302,6 +312,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	skyboxSphere.init();
 	skyboxSphere.setShader(&shaderSkybox);
 	skyboxSphere.setScale(glm::vec3(20.0f, 20.0f, 20.0f));
+
+	sphereCollider.init();
+	sphereCollider.setShader(&shader);
+
+	boxCollider.init();
+	boxCollider.setShader(&shader);
+	boxCollider.setColor(glm::vec4(0.3, 0.0, 0.3, 1.0));
 
 	rayModel.init();
 	rayModel.setShader(&shader);
@@ -679,6 +696,8 @@ void destroy() {
 	boxHighway.destroy();
 	boxLandingPad.destroy();
 	esfera1.destroy();
+	sphereCollider.destroy();
+	boxCollider.destroy();
 
 	// Custom objects Delete
 	modelAircraft.destroy();
@@ -718,6 +737,8 @@ void destroy() {
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
 	rayModel.destroy();
+
+	
 
 	// Terrains objects Delete
 	terrain.destroy();
@@ -1410,6 +1431,144 @@ void applicationLoop() {
 		glCullFace(oldCullFaceMode);
 		glDepthFunc(oldDepthFuncMode);
 
+		// Creacion de Colliders
+		AbstractModel::SBB rockCollider;
+		glm::mat4 modelMatrixRockCollider = glm::mat4(matrixModelRock);
+		modelMatrixRockCollider = glm::scale(modelMatrixRockCollider, glm::vec3(1.0));
+		modelMatrixRockCollider = glm::translate(modelMatrixRockCollider, modelRock.getSbb().c);
+		rockCollider.c = glm::vec3(modelMatrixRockCollider[3]);
+		rockCollider.ratio = modelRock.getSbb().ratio;
+		addOrUpdateColliders(collidersSBB,"rock",rockCollider, matrixModelRock);
+
+		// Crecion de colliders OBB
+		AbstractModel::OBB aircraftCollider;
+		glm::mat4 modelMatrixAircraftCollider = glm::mat4(modelMatrixAircraft);
+		aircraftCollider.u = glm::quat_cast(modelMatrixAircraftCollider); // Para que no este manipulado por un escalamiento
+		modelMatrixAircraftCollider = glm::scale(modelMatrixAircraftCollider, glm::vec3(1.0));
+		modelMatrixAircraftCollider = glm::translate(modelMatrixAircraftCollider,
+			modelAircraft.getObb().c);
+		aircraftCollider.e = modelAircraft.getObb().e*glm::vec3(1.0);
+		aircraftCollider.c = modelMatrixAircraftCollider[3];
+		addOrUpdateColliders(collidersOBB, "aircraft", aircraftCollider, modelMatrixAircraft);
+
+		AbstractModel::OBB dartCollider;
+		glm::mat4 modelMatrixDartCollider = glm::mat4(modelMatrixDart);
+		dartCollider.u = glm::quat_cast(modelMatrixDartCollider);
+		modelMatrixDartCollider = glm::scale(modelMatrixDartCollider, glm::vec3(0.5));
+		modelMatrixDartCollider = glm::translate(modelMatrixDartCollider,
+			modelDartLegoBody.getObb().c);
+		dartCollider.c = modelMatrixDartCollider[3];
+		dartCollider.e = modelDartLegoBody.getObb().e*0.5f;
+		addOrUpdateColliders(collidersOBB, "dart", dartCollider, modelMatrixDart);
+
+		// Lamp1 collider
+		for (int i = 0; i < lamp1Position.size(); i++) {
+			AbstractModel::OBB lampCollider;
+			glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
+			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, lamp1Position[i]);
+			modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp,
+				glm::radians(lamp1Orientation[i]), glm::vec3(0, 1, 0));
+			addOrUpdateColliders(collidersOBB, "lamp1-" + std::to_string(i), lampCollider,
+				modelMatrixColliderLamp);
+			lampCollider.u = glm::quat_cast(modelMatrixColliderLamp);
+			modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp, glm::vec3(0.5));
+			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
+				modelLamp1.getObb().c);
+			lampCollider.c = modelMatrixColliderLamp[3];
+			lampCollider.e = modelLamp1.getObb().e * 0.5f;
+			std::get<0>(collidersOBB.find("lamp1-" + std::to_string(i))->second) = lampCollider;
+		}
+
+		// Lamp2 collider
+		for (int i = 0; i < lamp2Position.size(); i++) {
+			AbstractModel::OBB lampCollider;
+			glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
+			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, lamp2Position[i]);
+			modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp,
+				glm::radians(lamp2Orientation[i]), glm::vec3(0, 1, 0));
+			addOrUpdateColliders(collidersOBB, "lamp2-" + std::to_string(i), lampCollider,
+				modelMatrixColliderLamp);
+			lampCollider.u = glm::quat_cast(modelMatrixColliderLamp);
+			modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp, glm::vec3(0.5));
+			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
+				modelLampPost2.getObb().c);
+			lampCollider.c = modelMatrixColliderLamp[3];
+			lampCollider.e = modelLampPost2.getObb().e * 0.5f;
+			std::get<0>(collidersOBB.find("lamp2-" + std::to_string(i))->second) = lampCollider;
+		}
+
+		AbstractModel::OBB mayowCollider;
+		glm::mat4 modelMatrixColliderMayow = glm::mat4(modelMatrixMayow);
+		modelMatrixColliderMayow = glm::rotate(modelMatrixColliderMayow, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+		mayowCollider.u = glm::quat_cast(modelMatrixColliderMayow);
+		modelMatrixColliderMayow = glm::scale(modelMatrixColliderMayow, glm::vec3(0.021f));
+		modelMatrixColliderMayow = glm::translate(modelMatrixColliderMayow, 
+			mayowModelAnimate.getObb().c);
+		mayowCollider.e = mayowModelAnimate.getObb().e * 0.021f*0.75f; // PAra ajustar con los brazos abiertos
+		mayowCollider.c = modelMatrixColliderMayow[3];
+		addOrUpdateColliders(collidersOBB, "mayow", mayowCollider, modelMatrixMayow);
+
+		std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator itObb1;
+		std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator itObb2;
+		std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator itSBB1;
+		std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator itSBB2;
+		for (itObb1 = collidersOBB.begin(); itObb1 != collidersOBB.end(); itObb1++) {
+			bool isColision = false;
+			for (itObb2 = collidersOBB.begin(); itObb2 != collidersOBB.end() && !isColision; itObb2++) {
+				if (itObb1 != itObb2 && testOBBOBB(std::get<0>(itObb1->second), std::get<0>(itObb2->second))) {
+					std::cout << "Hay colision entre " << itObb1->first << " y el model " << itObb2->first << std::endl;
+					isColision = true;
+				}
+			}
+		}
+
+		for (itSBB1 = collidersSBB.begin(); itSBB1 != collidersSBB.end(); itSBB1++) {
+			bool isColision = false;
+			for (itObb1 = collidersOBB.begin(); itObb1 != collidersOBB.end() && !isColision; itObb1++) {
+				if (testSphereOBox(std::get<0>(itSBB1->second), std::get<0>(itObb1->second))) {
+					std::cout << "Hay colision entre " << itSBB1->first << " y el objeto " << itObb1->first << std::endl;
+					isColision = true;
+				}
+			}
+		}
+
+		
+
+		for (itSBB1 = collidersSBB.begin(); itSBB1 != collidersSBB.end(); itSBB1++) {
+			bool isColision = false;
+			for (itSBB2 = collidersSBB.begin(); itSBB2 != collidersSBB.end() && !isColision; itSBB2++) {
+				if (itSBB1!=itSBB2 &&testSphereSphereIntersection(std::get<0>(itSBB1->second),std::get<0>(itSBB2->second))) {
+					std::cout << "Hay colision entre " << itSBB1->first << " y el objeto " << itSBB2->first << std::endl;
+					isColision = true;
+
+				}
+			}
+		}
+
+		// Renders de colliders
+		std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator it;
+		for (it = collidersSBB.begin(); it != collidersSBB.end(); it++) {
+			glm::mat4 matrixCollider = glm::mat4(1.0);
+			matrixCollider = glm::translate(matrixCollider, std::get<0>(it->second).c);
+			matrixCollider = glm::scale(matrixCollider, glm::vec3(std::get<0>(it->second).ratio*2.0));
+			sphereCollider.setColor(glm::vec4(1.0));
+			sphereCollider.enableWireMode();
+			sphereCollider.render(matrixCollider);
+			sphereCollider.enableFillMode();
+		}
+
+		//renders colliders de las OBBs
+		std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator itObb;
+		for (itObb = collidersOBB.begin(); itObb != collidersOBB.end(); itObb++) {
+			glm::mat4 matrixCollider = glm::mat4(1.0);
+			matrixCollider = glm::translate(matrixCollider, std::get<0>(itObb->second).c);
+			matrixCollider = matrixCollider * glm::mat4(std::get<0>(itObb->second).u);
+			matrixCollider = glm::scale(matrixCollider, std::get<0>(itObb->second).e * 2.0f);
+			boxCollider.enableWireMode();
+			boxCollider.render(matrixCollider);
+		}
+
+
 		// ray mayow direction
 		glm::mat4 modelMatrixRay = glm::mat4(modelMatrixMayow);
 		modelMatrixRay = glm::translate(modelMatrixRay, glm::vec3(0, 1, 0));
@@ -1423,6 +1582,13 @@ void applicationLoop() {
 		modelMatrixRay = glm::scale(modelMatrixRay, glm::vec3(0.05, maxDistanceRay, 0.05));
 		rayModel.render(modelMatrixRay);
 		
+		for (itSBB1 = collidersSBB.begin(); itSBB1 != collidersSBB.end(); itSBB1++) {
+			float tRint;
+			if (raySphereIntersect(ori, dest, rayDirection, std::get<0>(itSBB1->second), tRint)) {
+				std::cout << "Colision rayo mayow y " << itSBB1->first << std::endl;
+			}
+		}
+
 		// Animaciones por keyframes dart Vader
 		// Para salvar los keyframes
 		if(record && modelSelected == 1){
